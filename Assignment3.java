@@ -1,56 +1,64 @@
-import java.io.*;
-import java.util.*;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Scanner;
 public class Assignment3 {
-    public static void main(String[] args) {
+    public static double findMedian(ArrayList<Double>a)
+    {
+        Collections.sort(a);
+        int n=a.size();
+        if (n % 2 != 0)
+            return (double) a.get(n / 2);
+
+        return (double)(a.get((n - 1) / 2) + a.get(n / 2)) / 2.0;
+    }
+    public static void runSystemCommand(String command) {
+
         try {
-            ProcessBuilder processBuilder = new ProcessBuilder("ping", "-c", "10", "127.0.0.1");
-            Process process = processBuilder.start();
-            BufferedReader stdInput = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            Process p = Runtime.getRuntime().exec(command);
+            BufferedReader inputStream = new BufferedReader(new InputStreamReader(p.getInputStream()));
 
-            String s;
-            int linecount = 0;
-            ArrayList<Float> times = new ArrayList<>();
+            String s = "";
+            ArrayList<Double> timeTaken=new ArrayList<>();
 
-            while (linecount<=10 && (s = stdInput.readLine()) != null) {
-                if(linecount != 0)
-                    times.add(getTimeFromInputMessage(s));
-                ++linecount;
+            while ((s = inputStream.readLine()) != null) {
+                System.out.println(s);
+                int indexOfTime=s.indexOf("time=");
+                indexOfTime+=5;
+                int indexOfms=s.indexOf("ms");
+                if(indexOfms>-1 && indexOfTime>-1){
+                    double time=Double.parseDouble(s.substring(indexOfTime,indexOfms-1));
+                    timeTaken.add(time);
+                    System.out.println("Median: "+findMedian(timeTaken));
+                }
             }
 
-            Collections.sort(times);
 
-            float mediantime = (float) (times.get(5) + times.get(6)) / 2.0f;
 
-            System.out.println("Median time is " + mediantime +" ms");
         }
         catch (Exception e) {
             e.printStackTrace();
         }
     }
+    public static void main(String[] args) {
 
-    public static float getTimeFromInputMessage(String s) {
-        int i = 0;
-        int spacescount = 0;
-        int l;
-        l=s.length();
-
-        while(i<l && spacescount < 6) {
-            if(s.charAt(i)==' ') {
-                ++spacescount;
-            }
-            ++i;
+        String s;
+        Scanner in = new Scanner(System.in);
+        System.out.println("Enter the url : ");
+        s =in.nextLine();
+        try {
+            InetAddress ip = InetAddress.getByName(new URL(s).getHost());
+            //System.out.println(ip);
+            String ipAddress=ip.getHostAddress();
+            //System.out.println(ipAddress);
+            runSystemCommand("ping " + ipAddress);
         }
-
-        String time = "";
-
-        while(i<l && s.charAt(i)!=' ') {
-            time=time + s.charAt(i);
-            ++i;
+        catch (MalformedURLException e) {
+            System.out.println("Invalid URL");
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
         }
-
-        time = time.substring(5);
-
-        return Float.parseFloat(time);
-
     }
 }
